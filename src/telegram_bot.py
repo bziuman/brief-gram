@@ -5,28 +5,36 @@ load_dotenv()
 import os
 import io
 from PIL import Image
+from processor import Processor, ProcessTask
+import asyncio
 
 BOT_TOKEN = str(os.getenv('BOT_TOKEN'))
+processor = Processor()
 
-async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def brief_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    processor: Processor = context.bot_data['processor']
     msg = update.message
     text = msg.text or msg.caption or ''
+    image = None
 
     if msg.photo:
         photo = msg.photo[-1]
         file = await photo.get_file()
 
         image = Image.open(io.BytesIO(await file.download_as_bytearray()))
-        image.show()
+    await processor.enqueue(ProcessTask(
+        text=text,
+        image=image,
+        chat_id=msg.chat_id,
+        message_id=msg.message_id
+    ))
     
+async def start(update: Update, context: ContextTypes):
+    await update.message.reply_text('Bot working')
 
-def main():
+def build_app(processor: Processor):
     app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(MessageHandler(filters.FORWARDED, echo))
-    app.run_polling()
-
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        print('Bot stopped')
+    app.bot_data['processor'] = processor
+    app.add_handler(MessageHandler(filters.FORWARDED, brief_post))
+    app.add_handler(CommandHandler('start', start))
+    return app
