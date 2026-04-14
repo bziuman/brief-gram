@@ -27,7 +27,6 @@ class Processor:
         self._running = True
         while self._running:
             task = await self.queue.get()
-            print(f'task:\n{task}')
             try:
                 await self._handle(task)
             except Exception as e:
