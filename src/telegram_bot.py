@@ -22,7 +22,6 @@ async def brief_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await photo.get_file()
 
         image = Image.open(io.BytesIO(await file.download_as_bytearray()))
-    print('echo')
     await processor.enqueue(ProcessTask(
         text=text,
         image=image,
