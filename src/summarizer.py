@@ -1,9 +1,10 @@
 import ollama
+import asyncio
 
 class Summarizer:
     def __init__(self):
       self.models_list = []
-      self.active_llm_model = None
+      self.active_llm_model = ''
       self.promtp = '''
                         Ты аналітик.
                         Дай:
@@ -26,7 +27,7 @@ class Summarizer:
         self.active_llm_model = self.models_list[0]
 
     async def get_model_list(self):
-        request = ollama.list()
+        request = await asyncio.to_thread(ollama.list) 
         self.models_list = []
         for model in request['models']:
             self.models_list.append(model['model'])
@@ -38,7 +39,7 @@ class Summarizer:
     async def summarize(self, text, image):
         prompt = self.promtp.format(text=text)
         print(prompt)
-        response = ollama.chat(
+        response = await asyncio.to_thread(ollama.chat,
             model=self.active_llm_model,
             messages=[
                 {
@@ -47,7 +48,7 @@ class Summarizer:
                 }
             ]
         )
-        print(response['message']['content'])
+        return response['message']['content']
 
     async def set_prompt(self, text):
         self.promtp = text
