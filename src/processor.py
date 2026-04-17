@@ -12,16 +12,19 @@ class ProcessTask:
     message_id: Optional[int] = None
 
 class Processor:
-    def __init__(self):
+    def __init__(self, summarizer, send_result):
         self.queue: asyncio.Queue[ProcessTask] = asyncio.Queue()
         self._running = False
+        self.summarizer = summarizer
+        self.send_result = send_result
 
     async def enqueue(self, task: ProcessTask):
         await self.queue.put(task)
 
     async def _handle(self, task: ProcessTask):
-        print('handle')
-        print(f'task\n text: {task.text}\nimage: {task.image}\nchat id: {task.chat_id}\nmessage id: {task.message_id}')
+        result = await self.summarizer.summarize(task.text, task.image)
+        if task.chat_id and result:
+            await self.send_result(task.chat_id, result, task.message_id)
 
     async def run(self):
         self._running = True
