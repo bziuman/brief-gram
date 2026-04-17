@@ -6,10 +6,8 @@ import os
 import io
 from PIL import Image
 from processor import Processor, ProcessTask
-import asyncio
 
 BOT_TOKEN = str(os.getenv('BOT_TOKEN'))
-processor = Processor()
 
 async def brief_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     processor: Processor = context.bot_data['processor']
@@ -32,9 +30,10 @@ async def brief_post(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def start(update: Update, context: ContextTypes):
     await update.message.reply_text('Bot working')
 
-def build_app(processor: Processor):
+def build_app(processor: Processor, summarizer):
     app = Application.builder().token(BOT_TOKEN).build()
     app.bot_data['processor'] = processor
+    app.bot_data['summarizer'] = summarizer
     app.add_handler(MessageHandler(filters.FORWARDED, brief_post))
     app.add_handler(CommandHandler('start', start))
     return app
